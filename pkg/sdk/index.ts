@@ -1,4 +1,8 @@
-import { Configuration, FrontendApi } from "@ory/client"
-import { edgeConfig } from "@ory/integrations/next"
+import { Configuration, FrontendApi } from "@ory/client";
 
-export default new FrontendApi(new Configuration(edgeConfig))
+export default new FrontendApi(
+  new Configuration({
+    basePath: `/api/.ory`,
+    accessToken: process.env.ORY_ACCESS_TOKEN
+  })
+);

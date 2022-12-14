@@ -1,25 +1,49 @@
-import "../styles/globals.css"
-import { theme, globalStyles, ThemeProps } from "@ory/themes"
-import type { AppProps } from "next/app"
-import { ToastContainer } from "react-toastify"
-import "react-toastify/dist/ReactToastify.css"
-import { ThemeProvider } from "styled-components"
-import { createGlobalStyle } from "styled-components"
+import { EmotionCache } from "@emotion/cache";
+import { CacheProvider } from "@emotion/react";
+import { CssBaseline } from "@mui/material";
+import { AppProps } from "next/app";
+import Head from "next/head";
+import React, { useState } from "react";
 
-const GlobalStyle = createGlobalStyle((props: ThemeProps) =>
-  globalStyles(props),
-)
+import { CustomThemeProvider } from "../contexts";
+import { ToastProvider } from "../contexts";
+import { createEmotionCache } from "../utils";
 
-function MyApp({ Component, pageProps }: AppProps) {
+const clientSideEmotionCacheInstance = createEmotionCache(
+  typeof document === "undefined"
+    ? undefined
+    : (document.querySelector('[property="csp-nonce"]') as HTMLMetaElement)
+        ?.content
+);
+
+const MyApp: React.FC<
+  AppProps & {
+    emotionCache: EmotionCache;
+  }
+> = ({ Component, emotionCache, pageProps }) => {
+  const [clientSideEmotionCache] = useState(
+    emotionCache || clientSideEmotionCacheInstance
+  );
   return (
-    <div data-testid="app-react">
-      <ThemeProvider theme={theme}>
-        <GlobalStyle />
-        <Component {...pageProps} />
-        <ToastContainer />
-      </ThemeProvider>
-    </div>
-  )
-}
+    <>
+      <Head>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"
+        />
+      </Head>
+      <div data-testid="app-react">
+        <CacheProvider value={emotionCache || clientSideEmotionCache}>
+          <CustomThemeProvider>
+            <ToastProvider>
+              <Component {...pageProps} />
+              <CssBaseline />
+            </ToastProvider>
+          </CustomThemeProvider>
+        </CacheProvider>
+      </div>
+    </>
+  );
+};
 
-export default MyApp
+export default MyApp;

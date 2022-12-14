@@ -1,16 +1,11 @@
-import { UiNode, UiNodeTextAttributes } from "@ory/client"
-import { UiText } from "@ory/client"
-import { CodeBox, P } from "@ory/themes"
-import styled from "styled-components"
+import { css } from "@emotion/react";
+import { UiNode, UiNodeTextAttributes } from "@ory/client";
+import { UiText } from "@ory/client";
 
 interface Props {
-  node: UiNode
-  attributes: UiNodeTextAttributes
+  node: UiNode;
+  attributes: UiNodeTextAttributes;
 }
-
-const ScrollableCodeBox = styled(CodeBox)`
-  overflow-x: auto;
-`
 
 const Content = ({ node, attributes }: Props) => {
   switch (attributes.text.id) {
@@ -26,8 +21,8 @@ const Content = ({ node, attributes }: Props) => {
             {/* Used lookup_secret has ID 1050014 */}
             <code>{text.id === 1050014 ? "Used" : text.text}</code>
           </div>
-        ),
-      )
+        )
+      );
       return (
         <div
           className="container-fluid"
@@ -35,23 +30,29 @@ const Content = ({ node, attributes }: Props) => {
         >
           <div className="row">{secrets}</div>
         </div>
-      )
+      );
   }
 
   return (
     <div data-testid={`node/text/${attributes.id}/text`}>
-      <ScrollableCodeBox code={attributes.text.text} />
+      <pre
+        css={css`
+          overflow-x: auto;
+        `}
+      >
+        <code>{JSON.stringify(attributes.text.text, null, 2)}</code>
+      </pre>
     </div>
-  )
-}
+  );
+};
 
 export const NodeText = ({ node, attributes }: Props) => {
   return (
     <>
-      <P data-testid={`node/text/${attributes.id}/label`}>
+      <p data-testid={`node/text/${attributes.id}/label`}>
         {node.meta?.label?.text}
-      </P>
+      </p>
       <Content node={node} attributes={attributes} />
     </>
-  )
-}
+  );
+};

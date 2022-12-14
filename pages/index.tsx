@@ -1,27 +1,27 @@
-import { Card, CardTitle, P, H2, H3, CodeBox } from "@ory/themes"
-import { AxiosError } from "axios"
-import type { NextPage } from "next"
-import Head from "next/head"
-import { useRouter } from "next/router"
-import { useEffect, useState } from "react"
+import { Card, CardHeader, CardContent, Typography } from "@mui/material";
+import { AxiosError } from "axios";
+import type { NextPage } from "next";
+import Head from "next/head";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 
-import { DocsButton, MarginCard, LogoutLink } from "../pkg"
-import ory from "../pkg/sdk"
+import { DocsButton, useLogoutHandler } from "../pkg";
+import ory from "../pkg/sdk";
 
 const Home: NextPage = () => {
   const [session, setSession] = useState<string>(
-    "No valid Ory Session was found.\nPlease sign in to receive one.",
-  )
-  const [hasSession, setHasSession] = useState<boolean>(false)
-  const router = useRouter()
-  const onLogout = LogoutLink()
+    "No valid Ory Session was found.\nPlease sign in to receive one."
+  );
+  const [hasSession, setHasSession] = useState<boolean>(false);
+  const router = useRouter();
+  const onLogout = useLogoutHandler();
 
   useEffect(() => {
     ory
       .toSession()
       .then(({ data }) => {
-        setSession(JSON.stringify(data, null, 2))
-        setHasSession(true)
+        setSession(JSON.stringify(data, null, 2));
+        setHasSession(true);
       })
       .catch((err: AxiosError) => {
         switch (err.response?.status) {
@@ -32,16 +32,16 @@ const Home: NextPage = () => {
             // This status code is returned when we are trying to
             // validate a session which has not yet completed
             // its second factor
-            return router.push("/login?aal=aal2")
+            return router.push("/login?aal=aal2");
           case 401:
             // do nothing, the user is not logged in
-            return
+            return;
         }
 
         // Something else happened!
-        return Promise.reject(err)
-      })
-  }, [router])
+        return Promise.reject(err);
+      });
+  }, [router]);
 
   return (
     <div className={"container-fluid"}>
@@ -50,67 +50,73 @@ const Home: NextPage = () => {
         <meta name="description" content="NextJS + React + Vercel + Ory" />
       </Head>
 
-      <MarginCard wide>
-        <CardTitle>Welcome to Ory!</CardTitle>
-        <P>
-          Welcome to the Ory Managed UI. This UI implements a run-of-the-mill
-          user interface for all self-service flows (login, registration,
-          recovery, verification, settings). The purpose of this UI is to help
-          you get started quickly. In the long run, you probably want to
-          implement your own custom user interface.
-        </P>
-        <div className="row">
-          <div className="col-md-4 col-xs-12">
-            <div className="box">
-              <H3>Documentation</H3>
-              <P>
-                Here are some useful documentation pieces that help you get
-                started.
-              </P>
-              <div className="row">
-                <DocsButton
-                  title="Get Started"
-                  href="https://www.ory.sh/docs/get-started"
-                  testid="get-started"
-                />
-                <DocsButton
-                  title="User Flows"
-                  href="https://www.ory.sh/docs/concepts/self-service"
-                  testid="user-flows"
-                />
-                <DocsButton
-                  title="Identities"
-                  href="https://www.ory.sh/docs/concepts/identity"
-                  testid="identities"
-                />
-                <DocsButton
-                  title="Sessions"
-                  href="https://www.ory.sh/docs/concepts/session"
-                  testid="sessions"
-                />
-                <DocsButton
-                  title="Bring Your Own UI"
-                  href="https://www.ory.sh/docs/guides/bring-your-user-interface"
-                  testid="customize-ui"
-                />
+      <Card>
+        <CardHeader title="Welcome to Ory!" />
+        <CardContent>
+          <p>
+            Welcome to the Ory Managed UI. This UI implements a run-of-the-mill
+            user interface for all self-service flows (login, registration,
+            recovery, verification, settings). The purpose of this UI is to help
+            you get started quickly. In the long run, you probably want to
+            implement your own custom user interface.
+          </p>
+          <div className="row">
+            <div className="col-md-4 col-xs-12">
+              <div className="box">
+                <Typography variant="h3">Documentation</Typography>
+                <p>
+                  Here are some useful documentation pieces that help you get
+                  started.
+                </p>
+                <div className="row">
+                  <DocsButton
+                    title="Get Started"
+                    href="https://www.ory.sh/docs/get-started"
+                    testid="get-started"
+                  />
+                  <DocsButton
+                    title="User Flows"
+                    href="https://www.ory.sh/docs/concepts/self-service"
+                    testid="user-flows"
+                  />
+                  <DocsButton
+                    title="Identities"
+                    href="https://www.ory.sh/docs/concepts/identity"
+                    testid="identities"
+                  />
+                  <DocsButton
+                    title="Sessions"
+                    href="https://www.ory.sh/docs/concepts/session"
+                    testid="sessions"
+                  />
+                  <DocsButton
+                    title="Bring Your Own UI"
+                    href="https://www.ory.sh/docs/guides/bring-your-user-interface"
+                    testid="customize-ui"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="col-md-8 col-xs-12">
+              <div className="box">
+                <Typography variant="h3">Session Information</Typography>
+                <p>
+                  Below you will find the decoded Ory Session if you are logged
+                  in.
+                </p>
+                <pre>
+                  <code data-testid="session-content">
+                    {JSON.stringify(session, null, 2)}
+                  </code>
+                </pre>
               </div>
             </div>
           </div>
-          <div className="col-md-8 col-xs-12">
-            <div className="box">
-              <H3>Session Information</H3>
-              <P>
-                Below you will find the decoded Ory Session if you are logged
-                in.
-              </P>
-              <CodeBox data-testid="session-content" code={session} />
-            </div>
-          </div>
-        </div>
-      </MarginCard>
+        </CardContent>
+      </Card>
 
-      <Card wide>
-        <H2>Other User Interface Screens</H2>
+      <Card>
+        <Typography variant="h2">Other User Interface Screens</Typography>
         <div className={"row"}>
           <DocsButton
             unresponsive
@@ -156,7 +162,7 @@ const Home: NextPage = () => {
         </div>
       </Card>
     </div>
-  )
-}
+  );
+};
 
-export default Home
+export default Home;

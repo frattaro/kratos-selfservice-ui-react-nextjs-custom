@@ -1,28 +1,29 @@
-import { UiText } from "@ory/client"
-import { Alert, AlertContent } from "@ory/themes"
+import { Alert } from "@mui/material";
+import { UiText } from "@ory/client";
 
 interface MessageProps {
-  message: UiText
+  message: UiText;
 }
 
 export const Message = ({ message }: MessageProps) => {
   return (
-    <Alert severity={message.type === "error" ? "error" : "info"}>
-      <AlertContent data-testid={`ui/message/${message.id}`}>
-        {message.text}
-      </AlertContent>
+    <Alert
+      data-testid={`ui/message/${message.id}`}
+      severity={message.type === "error" ? "error" : "info"}
+    >
+      {message.text}
     </Alert>
-  )
-}
+  );
+};
 
 interface MessagesProps {
-  messages?: Array<UiText>
+  messages?: Array<UiText>;
 }
 
 export const Messages = ({ messages }: MessagesProps) => {
   if (!messages) {
     // No messages? Do nothing.
-    return null
+    return null;
   }
 
   return (
@@ -31,5 +32,5 @@ export const Messages = ({ messages }: MessagesProps) => {
         <Message key={message.id} message={message} />
       ))}
     </div>
-  )
-}
+  );
+};

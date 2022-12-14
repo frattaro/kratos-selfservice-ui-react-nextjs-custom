@@ -1,21 +1,29 @@
-import { LoginFlow, UpdateLoginFlowBody } from "@ory/client"
-import { CardTitle } from "@ory/themes"
-import { AxiosError } from "axios"
-import type { NextPage } from "next"
-import Head from "next/head"
-import Link from "next/link"
-import { useRouter } from "next/router"
-import { useEffect, useState } from "react"
+import {
+  Button,
+  Card,
+  CardHeader,
+  CardContent,
+  CardActions
+} from "@mui/material";
+import { LoginFlow, UpdateLoginFlowBody } from "@ory/client";
+import { AxiosError } from "axios";
+import type { NextPage } from "next";
+import Head from "next/head";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 
-import { ActionCard, CenterLink, LogoutLink, Flow, MarginCard } from "../pkg"
-import { handleGetFlowError, handleFlowError } from "../pkg/errors"
-import ory from "../pkg/sdk"
+import { useToast } from "../hooks";
+import { Flow, useLogoutHandler } from "../pkg";
+import { handleFlowError } from "../pkg/errors";
+import ory from "../pkg/sdk";
 
 const Login: NextPage = () => {
-  const [flow, setFlow] = useState<LoginFlow>()
+  const [flow, setFlow] = useState<LoginFlow>();
+  const toast = useToast();
 
   // Get ?flow=... from the URL
-  const router = useRouter()
+  const router = useRouter();
   const {
     return_to: returnTo,
     flow: flowId,
@@ -24,17 +32,17 @@ const Login: NextPage = () => {
     refresh,
     // AAL = Authorization Assurance Level. This implies that we want to upgrade the AAL, meaning that we want
     // to perform two-factor authentication/verification.
-    aal,
-  } = router.query
+    aal
+  } = router.query;
 
   // This might be confusing, but we want to show the user an option
   // to sign out if they are performing two-factor authentication!
-  const onLogout = LogoutLink([aal, refresh])
+  const onLogout = useLogoutHandler([aal, refresh]);
 
   useEffect(() => {
     // If the router is not ready yet, or we already have a flow, do nothing.
     if (!router.isReady || flow) {
-      return
+      return;
     }
 
     // If ?flow=.. was in the URL, we fetch it
@@ -42,10 +50,10 @@ const Login: NextPage = () => {
       ory
         .getLoginFlow({ id: String(flowId) })
         .then(({ data }) => {
-          setFlow(data)
+          setFlow(data);
         })
-        .catch(handleGetFlowError(router, "login", setFlow))
-      return
+        .catch(handleFlowError(router, "login", setFlow, toast));
+      return;
     }
 
     // Otherwise we initialize it
@@ -53,13 +61,13 @@ const Login: NextPage = () => {
       .createBrowserLoginFlow({
         refresh: Boolean(refresh),
         aal: aal ? String(aal) : undefined,
-        returnTo: returnTo ? String(returnTo) : undefined,
+        returnTo: returnTo ? String(returnTo) : undefined
       })
       .then(({ data }) => {
-        setFlow(data)
+        setFlow(data);
       })
-      .catch(handleFlowError(router, "login", setFlow))
-  }, [flowId, router, router.isReady, aal, refresh, returnTo, flow])
+      .catch(handleFlowError(router, "login", setFlow, toast));
+  }, [flowId, router, router.isReady, aal, refresh, returnTo, flow, toast]);
 
   const onSubmit = (values: UpdateLoginFlowBody) =>
     router
@@ -70,29 +78,29 @@ const Login: NextPage = () => {
         ory
           .updateLoginFlow({
             flow: String(flow?.id),
-            updateLoginFlowBody: values,
+            updateLoginFlowBody: values
           })
           // We logged in successfully! Let's bring the user home.
           .then(() => {
             if (flow?.return_to) {
-              window.location.href = flow?.return_to
-              return
+              window.location.href = flow?.return_to;
+              return;
             }
-            router.push("/")
+            router.push("/");
           })
           .then(() => {})
-          .catch(handleFlowError(router, "login", setFlow))
+          .catch(handleFlowError(router, "login", setFlow, toast))
           .catch((err: AxiosError) => {
             // If the previous handler did not catch the error it's most likely a form validation error
             if (err.response?.status === 400) {
               // Yup, it is!
-              setFlow(err.response?.data)
-              return
+              setFlow(err.response?.data);
+              return;
             }
 
-            return Promise.reject(err)
-          }),
-      )
+            return Promise.reject(err);
+          })
+      );
 
   return (
     <>
@@ -100,41 +108,44 @@ const Login: NextPage = () => {
         <title>Sign in - Ory NextJS Integration Example</title>
         <meta name="description" content="NextJS + React + Vercel + Ory" />
       </Head>
-      <MarginCard>
-        <CardTitle>
-          {(() => {
-            if (flow?.refresh) {
-              return "Confirm Action"
-            } else if (flow?.requested_aal === "aal2") {
-              return "Two-Factor Authentication"
-            }
-            return "Sign In"
-          })()}
-        </CardTitle>
-        <Flow onSubmit={onSubmit} flow={flow} />
-      </MarginCard>
+      <Card>
+        <CardHeader
+          title={
+            flow?.refresh
+              ? "Confirm Action"
+              : flow?.requested_aal === "aal2"
+              ? "Two-Factor Authentication"
+              : "Sign In"
+          }
+        />
+        <CardContent>
+          <Flow onSubmit={onSubmit} flow={flow} />
+        </CardContent>
+      </Card>
       {aal || refresh ? (
-        <ActionCard>
-          <CenterLink data-testid="logout-link" onClick={onLogout}>
-            Log out
-          </CenterLink>
-        </ActionCard>
+        <Card>
+          <CardActions>
+            <Button variant="text" data-testid="logout-link" onClick={onLogout}>
+              Log out
+            </Button>
+          </CardActions>
+        </Card>
       ) : (
         <>
-          <ActionCard>
-            <Link href="/registration" passHref>
-              <CenterLink>Create account</CenterLink>
-            </Link>
-          </ActionCard>
-          <ActionCard>
-            <Link href="/recovery" passHref>
-              <CenterLink>Recover your account</CenterLink>
-            </Link>
-          </ActionCard>
+          <Card>
+            <CardActions>
+              <Link href="/registration">Create account</Link>
+            </CardActions>
+          </Card>
+          <Card>
+            <CardActions>
+              <Link href="/recovery">Recover your account</Link>
+            </CardActions>
+          </Card>
         </>
       )}
     </>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;

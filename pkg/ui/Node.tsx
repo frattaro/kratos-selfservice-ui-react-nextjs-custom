@@ -1,25 +1,25 @@
-import { UiNode } from "@ory/client"
+import { UiNode } from "@ory/client";
 import {
   isUiNodeAnchorAttributes,
   isUiNodeImageAttributes,
   isUiNodeInputAttributes,
   isUiNodeScriptAttributes,
-  isUiNodeTextAttributes,
-} from "@ory/integrations/ui"
+  isUiNodeTextAttributes
+} from "@ory/integrations/ui";
 
-import { NodeAnchor } from "./NodeAnchor"
-import { NodeImage } from "./NodeImage"
-import { NodeInput } from "./NodeInput"
-import { NodeScript } from "./NodeScript"
-import { NodeText } from "./NodeText"
-import { FormDispatcher, ValueSetter } from "./helpers"
+import { NodeAnchor } from "./NodeAnchor";
+import { NodeImage } from "./NodeImage";
+import { NodeInput } from "./NodeInput";
+import { NodeScript } from "./NodeScript";
+import { NodeText } from "./NodeText";
+import { FormDispatcher, ValueSetter } from "./helpers";
 
 interface Props {
-  node: UiNode
-  disabled: boolean
-  value: any
-  setValue: ValueSetter
-  dispatchSubmit: FormDispatcher
+  node: UiNode;
+  disabled: boolean;
+  value: any;
+  setValue: ValueSetter;
+  dispatchSubmit: FormDispatcher;
 }
 
 export const Node = ({
@@ -27,22 +27,22 @@ export const Node = ({
   value,
   setValue,
   disabled,
-  dispatchSubmit,
+  dispatchSubmit
 }: Props) => {
   if (isUiNodeImageAttributes(node.attributes)) {
-    return <NodeImage node={node} attributes={node.attributes} />
+    return <NodeImage node={node} attributes={node.attributes} />;
   }
 
   if (isUiNodeScriptAttributes(node.attributes)) {
-    return <NodeScript node={node} attributes={node.attributes} />
+    return <NodeScript node={node} attributes={node.attributes} />;
   }
 
   if (isUiNodeTextAttributes(node.attributes)) {
-    return <NodeText node={node} attributes={node.attributes} />
+    return <NodeText node={node} attributes={node.attributes} />;
   }
 
   if (isUiNodeAnchorAttributes(node.attributes)) {
-    return <NodeAnchor node={node} attributes={node.attributes} />
+    return <NodeAnchor node={node} attributes={node.attributes} />;
   }
 
   if (isUiNodeInputAttributes(node.attributes)) {
@@ -55,8 +55,8 @@ export const Node = ({
         disabled={disabled}
         attributes={node.attributes}
       />
-    )
+    );
   }
 
-  return null
-}
+  return null;
+};

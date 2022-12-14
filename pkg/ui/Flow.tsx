@@ -9,14 +9,14 @@ import {
   UpdateRegistrationFlowBody,
   UpdateSettingsFlowBody,
   UpdateVerificationFlowBody,
-  UiNode,
-} from "@ory/client"
-import { getNodeId } from "@ory/integrations/ui"
-import { isUiNodeInputAttributes } from "@ory/integrations/ui"
-import { Component, FormEvent } from "react"
+  UiNode
+} from "@ory/client";
+import { getNodeId } from "@ory/integrations/ui";
+import { isUiNodeInputAttributes } from "@ory/integrations/ui";
+import { Component, FormEvent } from "react";
 
-import { Messages } from "./Messages"
-import { Node } from "./Node"
+import { Messages } from "./Messages";
+import { Node } from "./Node";
 
 export type Values = Partial<
   | UpdateLoginFlowBody
@@ -24,7 +24,7 @@ export type Values = Partial<
   | UpdateRecoveryFlowBody
   | UpdateSettingsFlowBody
   | UpdateVerificationFlowBody
->
+>;
 
 export type Methods =
   | "oidc"
@@ -33,7 +33,7 @@ export type Methods =
   | "totp"
   | "webauthn"
   | "link"
-  | "lookup_secret"
+  | "lookup_secret";
 
 export type Props<T> = {
   // The flow
@@ -42,47 +42,47 @@ export type Props<T> = {
     | RegistrationFlow
     | SettingsFlow
     | VerificationFlow
-    | RecoveryFlow
+    | RecoveryFlow;
   // Only show certain nodes. We will always render the default nodes for CSRF tokens.
-  only?: Methods
+  only?: Methods;
   // Is triggered on submission
-  onSubmit: (values: T) => Promise<void>
+  onSubmit: (values: T) => Promise<void>;
   // Do not show the global messages. Useful when rendering them elsewhere.
-  hideGlobalMessages?: boolean
-}
+  hideGlobalMessages?: boolean;
+};
 
 function emptyState<T>() {
-  return {} as T
+  return {} as T;
 }
 
 type State<T> = {
-  values: T
-  isLoading: boolean
-}
+  values: T;
+  isLoading: boolean;
+};
 
 export class Flow<T extends Values> extends Component<Props<T>, State<T>> {
   constructor(props: Props<T>) {
-    super(props)
+    super(props);
     this.state = {
       values: emptyState(),
-      isLoading: false,
-    }
+      isLoading: false
+    };
   }
 
   componentDidMount() {
-    this.initializeValues(this.filterNodes())
+    this.initializeValues(this.filterNodes());
   }
 
   componentDidUpdate(prevProps: Props<T>) {
     if (prevProps.flow !== this.props.flow) {
       // Flow has changed, reload the values!
-      this.initializeValues(this.filterNodes())
+      this.initializeValues(this.filterNodes());
     }
   }
 
   initializeValues = (nodes: Array<UiNode> = []) => {
     // Compute the values
-    const values = emptyState<T>()
+    const values = emptyState<T>();
     nodes.forEach((node) => {
       // This only makes sense for text nodes
       if (isUiNodeInputAttributes(node.attributes)) {
@@ -93,68 +93,68 @@ export class Flow<T extends Values> extends Component<Props<T>, State<T>> {
           // In order to mimic real HTML forms, we need to skip setting the value
           // for buttons as the button value will (in normal HTML forms) only trigger
           // if the user clicks it.
-          return
+          return;
         }
-        values[node.attributes.name as keyof Values] = node.attributes.value
+        values[node.attributes.name as keyof Values] = node.attributes.value;
       }
-    })
+    });
 
     // Set all the values!
-    this.setState((state) => ({ ...state, values }))
-  }
+    this.setState((state) => ({ ...state, values }));
+  };
 
   filterNodes = (): Array<UiNode> => {
-    const { flow, only } = this.props
+    const { flow, only } = this.props;
     if (!flow) {
-      return []
+      return [];
     }
     return flow.ui.nodes.filter(({ group }) => {
       if (!only) {
-        return true
+        return true;
       }
-      return group === "default" || group === only
-    })
-  }
+      return group === "default" || group === only;
+    });
+  };
 
   // Handles form submission
   handleSubmit = (e: MouseEvent | FormEvent) => {
     // Prevent all native handlers
-    e.stopPropagation()
-    e.preventDefault()
+    e.stopPropagation();
+    e.preventDefault();
 
     // Prevent double submission!
     if (this.state.isLoading) {
-      return Promise.resolve()
+      return Promise.resolve();
     }
 
     this.setState((state) => ({
       ...state,
-      isLoading: true,
-    }))
+      isLoading: true
+    }));
 
     return this.props.onSubmit(this.state.values).finally(() => {
       // We wait for reconciliation and update the state after 50ms
       // Done submitting - update loading status
       this.setState((state) => ({
         ...state,
-        isLoading: false,
-      }))
-    })
-  }
+        isLoading: false
+      }));
+    });
+  };
 
   render() {
-    const { hideGlobalMessages, flow } = this.props
-    const { values, isLoading } = this.state
+    const { hideGlobalMessages, flow } = this.props;
+    const { values, isLoading } = this.state;
 
     // Filter the nodes - only show the ones we want
-    const nodes = this.filterNodes()
+    const nodes = this.filterNodes();
 
     if (!flow) {
       // No flow was set yet? It's probably still loading...
       //
       // Nodes have only one element? It is probably just the CSRF Token
       // and the filter did not match any elements!
-      return null
+      return null;
     }
 
     return (
@@ -165,7 +165,7 @@ export class Flow<T extends Values> extends Component<Props<T>, State<T>> {
       >
         {!hideGlobalMessages ? <Messages messages={flow.ui.messages} /> : null}
         {nodes.map((node, k) => {
-          const id = getNodeId(node) as keyof Values
+          const id = getNodeId(node) as keyof Values;
           return (
             <Node
               key={`${id}-${k}`}
@@ -180,17 +180,17 @@ export class Flow<T extends Values> extends Component<Props<T>, State<T>> {
                       ...state,
                       values: {
                         ...state.values,
-                        [getNodeId(node)]: value,
-                      },
+                        [getNodeId(node)]: value
+                      }
                     }),
-                    resolve,
-                  )
+                    resolve
+                  );
                 })
               }
             />
-          )
+          );
         })}
       </form>
-    )
+    );
   }
 }

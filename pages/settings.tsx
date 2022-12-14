@@ -1,52 +1,58 @@
-import { SettingsFlow, UpdateSettingsFlowBody } from "@ory/client"
-import { CardTitle, H3, P } from "@ory/themes"
-import { AxiosError } from "axios"
-import type { NextPage } from "next"
-import Head from "next/head"
-import Link from "next/link"
-import { useRouter } from "next/router"
-import { ReactNode, useEffect, useState } from "react"
+import { Card, CardHeader, CardActions, Typography } from "@mui/material";
+import { SettingsFlow, UpdateSettingsFlowBody } from "@ory/client";
+import { AxiosError } from "axios";
+import type { NextPage } from "next";
+import Head from "next/head";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { ReactNode, useEffect, useState } from "react";
 
-import { Flow, Methods, Messages, ActionCard, CenterLink } from "../pkg"
-import { handleFlowError } from "../pkg/errors"
-import ory from "../pkg/sdk"
+import { useToast } from "../hooks";
+import { Flow, Methods, Messages } from "../pkg";
+import { handleFlowError } from "../pkg/errors";
+import ory from "../pkg/sdk";
 
 interface Props {
-  flow?: SettingsFlow
-  only?: Methods
+  flow?: SettingsFlow;
+  only?: Methods;
 }
 
 function SettingsCard({
   flow,
   only,
-  children,
+  children
 }: Props & { children: ReactNode }) {
   if (!flow) {
-    return null
+    return null;
   }
 
   const nodes = only
     ? flow.ui.nodes.filter(({ group }) => group === only)
-    : flow.ui.nodes
+    : flow.ui.nodes;
 
   if (nodes.length === 0) {
-    return null
+    return null;
   }
 
-  return <ActionCard wide>{children}</ActionCard>
+  return (
+    <Card>
+      <CardActions>{children}</CardActions>
+    </Card>
+  );
 }
 
 const Settings: NextPage = () => {
-  const [flow, setFlow] = useState<SettingsFlow>()
+  const [flow, setFlow] = useState<SettingsFlow>();
+  const toast = useToast();
 
   // Get ?flow=... from the URL
-  const router = useRouter()
-  const { flow: flowId, return_to: returnTo } = router.query
+  const router = useRouter();
+  const { flow: flowId, return_to: returnTo } = router.query;
 
   useEffect(() => {
     // If the router is not ready yet, or we already have a flow, do nothing.
     if (!router.isReady || flow) {
-      return
+      return;
     }
 
     // If ?flow=.. was in the URL, we fetch it
@@ -54,22 +60,22 @@ const Settings: NextPage = () => {
       ory
         .getSettingsFlow({ id: String(flowId) })
         .then(({ data }) => {
-          setFlow(data)
+          setFlow(data);
         })
-        .catch(handleFlowError(router, "settings", setFlow))
-      return
+        .catch(handleFlowError(router, "settings", setFlow, toast));
+      return;
     }
 
     // Otherwise we initialize it
     ory
       .createBrowserSettingsFlow({
-        returnTo: returnTo ? String(returnTo) : undefined,
+        returnTo: returnTo ? String(returnTo) : undefined
       })
       .then(({ data }) => {
-        setFlow(data)
+        setFlow(data);
       })
-      .catch(handleFlowError(router, "settings", setFlow))
-  }, [flowId, router, router.isReady, returnTo, flow])
+      .catch(handleFlowError(router, "settings", setFlow, toast));
+  }, [flowId, router, router.isReady, returnTo, flow, toast]);
 
   const onSubmit = (values: UpdateSettingsFlowBody) =>
     router
@@ -80,24 +86,24 @@ const Settings: NextPage = () => {
         ory
           .updateSettingsFlow({
             flow: String(flow?.id),
-            updateSettingsFlowBody: values,
+            updateSettingsFlowBody: values
           })
           .then(({ data }) => {
             // The settings have been saved and the flow was updated. Let's show it to the user!
-            setFlow(data)
+            setFlow(data);
           })
-          .catch(handleFlowError(router, "settings", setFlow))
+          .catch(handleFlowError(router, "settings", setFlow, toast))
           .catch(async (err: AxiosError) => {
             // If the previous handler did not catch the error it's most likely a form validation error
             if (err.response?.status === 400) {
               // Yup, it is!
-              setFlow(err.response?.data)
-              return
+              setFlow(err.response?.data);
+              return;
             }
 
-            return Promise.reject(err)
-          }),
-      )
+            return Promise.reject(err);
+          })
+      );
 
   return (
     <>
@@ -108,11 +114,14 @@ const Settings: NextPage = () => {
         </title>
         <meta name="description" content="NextJS + React + Vercel + Ory" />
       </Head>
-      <CardTitle style={{ marginTop: 80 }}>
-        Profile Management and Security Settings
-      </CardTitle>
+      <Card>
+        <CardHeader
+          style={{ marginTop: 80 }}
+          title="Profile Management and Security Settings"
+        />
+      </Card>
       <SettingsCard only="profile" flow={flow}>
-        <H3>Profile Settings</H3>
+        <Typography variant="h3">Profile Settings</Typography>
         <Messages messages={flow?.ui.messages} />
         <Flow
           hideGlobalMessages
@@ -122,7 +131,7 @@ const Settings: NextPage = () => {
         />
       </SettingsCard>
       <SettingsCard only="password" flow={flow}>
-        <H3>Change Password</H3>
+        <Typography variant="h3">Change Password</Typography>
 
         <Messages messages={flow?.ui.messages} />
         <Flow
@@ -133,18 +142,18 @@ const Settings: NextPage = () => {
         />
       </SettingsCard>
       <SettingsCard only="oidc" flow={flow}>
-        <H3>Manage Social Sign In</H3>
+        <Typography variant="h3">Manage Social Sign In</Typography>
 
         <Messages messages={flow?.ui.messages} />
         <Flow hideGlobalMessages onSubmit={onSubmit} only="oidc" flow={flow} />
       </SettingsCard>
       <SettingsCard only="lookup_secret" flow={flow}>
-        <H3>Manage 2FA Backup Recovery Codes</H3>
+        <Typography variant="h3">Manage 2FA Backup Recovery Codes</Typography>
         <Messages messages={flow?.ui.messages} />
-        <P>
+        <p>
           Recovery codes can be used in panic situations where you have lost
           access to your 2FA device.
-        </P>
+        </p>
 
         <Flow
           hideGlobalMessages
@@ -154,8 +163,8 @@ const Settings: NextPage = () => {
         />
       </SettingsCard>
       <SettingsCard only="totp" flow={flow}>
-        <H3>Manage 2FA TOTP Authenticator App</H3>
-        <P>
+        <Typography variant="h3">Manage 2FA TOTP Authenticator App</Typography>
+        <p>
           Add a TOTP Authenticator App to your account to improve your account
           security. Popular Authenticator Apps are{" "}
           <a href="https://www.lastpass.com" rel="noreferrer" target="_blank">
@@ -178,17 +187,19 @@ const Settings: NextPage = () => {
             Android
           </a>
           ).
-        </P>
+        </p>
         <Messages messages={flow?.ui.messages} />
         <Flow hideGlobalMessages onSubmit={onSubmit} only="totp" flow={flow} />
       </SettingsCard>
       <SettingsCard only="webauthn" flow={flow}>
-        <H3>Manage Hardware Tokens and Biometrics</H3>
+        <Typography variant="h3">
+          Manage Hardware Tokens and Biometrics
+        </Typography>
         <Messages messages={flow?.ui.messages} />
-        <P>
+        <p>
           Use Hardware Tokens (e.g. YubiKey) or Biometrics (e.g. FaceID,
           TouchID) to enhance your account security.
-        </P>
+        </p>
         <Flow
           hideGlobalMessages
           onSubmit={onSubmit}
@@ -196,13 +207,13 @@ const Settings: NextPage = () => {
           flow={flow}
         />
       </SettingsCard>
-      <ActionCard wide>
-        <Link href="/" passHref>
-          <CenterLink>Go back</CenterLink>
-        </Link>
-      </ActionCard>
+      <Card>
+        <CardActions>
+          <Link href="/">Go back</Link>
+        </CardActions>
+      </Card>
     </>
-  )
-}
+  );
+};
 
-export default Settings
+export default Settings;

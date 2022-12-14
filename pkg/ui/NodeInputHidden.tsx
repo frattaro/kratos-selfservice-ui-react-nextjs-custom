@@ -1,4 +1,4 @@
-import { NodeInputProps } from "./helpers"
+import { NodeInputProps } from "./helpers";
 
 export function NodeInputHidden<T>({ attributes }: NodeInputProps) {
   // Render a hidden input field
@@ -8,5 +8,5 @@ export function NodeInputHidden<T>({ attributes }: NodeInputProps) {
       name={attributes.name}
       value={attributes.value || "true"}
     />
-  )
+  );
 }
